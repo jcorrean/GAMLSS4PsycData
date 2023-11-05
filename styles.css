@@ -1,19 +1,24 @@
 /* styles.css */
-body {
-    background-color: #7C0CC7; /* Set the background color */
+
+/* Customize the color */
+:root {
+    --color-primary: #7C0CC7;
+    --color-text: #131324; /* Add a variable for text color */
   }
   
+  /* Apply the custom color to the header */
+  .header {
+    background-color: var(--color-primary);
+    color: var(--color-text); /* Set the text color in the header */
+  }
+  
+  /* Apply the custom color to links */
   a {
-    color: #7C0CC7; /* Set the link color */
+    color: var(--color-text); /* Set the text color for links */
   }
   
+  /* Apply the custom color to the hover effect on links */
   a:hover {
-    color: #7C0CC7; /* Set the link color on hover */
+    color: darken(var(--color-text), 10%); /* Darken the text color on hover */
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    color: #131324; /* Set the title color */
-  }
-  
-  /* Add more styles as needed */
-      
+        
