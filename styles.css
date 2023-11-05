@@ -1,0 +1,22 @@
+/* styles.css */
+
+/* Customize the color */
+:root {
+    --color-primary: #7C0CC7;
+  }
+  
+  /* Apply the custom color to the header */
+  .header {
+    background-color: var(--color-primary);
+  }
+  
+  /* Apply the custom color to links */
+  a {
+    color: var(--color-primary);
+  }
+  
+  /* Apply the custom color to the hover effect on links */
+  a:hover {
+    color: darken(var(--color-primary), 10%);
+  }
+  
