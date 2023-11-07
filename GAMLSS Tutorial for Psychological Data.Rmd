@@ -86,9 +86,9 @@ p.2 <- data %>%
   geom_text(colour = "white", nudge_y = .2, aes(label = paste0('Count: ', n))) + 
   geom_text(colour = "white", nudge_y = -.2, aes(label = paste0('Percent of Group: ', yes_no_pct, '%'))) + guides(fill=FALSE)+ theme_light()
 
-png("F1.png", width = 15, height = 7, units = 'in', res = 300)
+
 grid.arrange(p.1, p.2, ncol=2,   widths = c(1.5, 1.5), top="balancing size by age and study groups")
-dev.off()
+
 ```
 
 ### Plots for each combination of variable types of interest
@@ -118,9 +118,9 @@ for(i in 1:p$nrow) {
   }
 }
 
-png("F2.png", width = 15, height = 9, units = 'in', res = 300)
+
 p+ theme_light()
-dev.off()
+
 ```
 
 ### Linearity of the Data
@@ -128,7 +128,9 @@ dev.off()
 To perform a more thorough evaluation of linear regression supposition, we proceed with loess smoother for each variable in the model. Loess smoother selectively weights points in the regression. We can also overlay the straight regression line as the original paper of Gignac and Zajenkowski (2020) to compare how the loess smoothing (detection of nonlinearities or local behaviour in data) compares to linear regression. In the plot, the grey shading corresponds to the standard errors for the loess smoother fit, while the red shading corresponds to the standard errors for the linear fit. The blue line is a loess smoothed line, and the red one is a linear regression line. As long as the loess smoother roughly approximates the linear tendency, the assumption of linearity has been apparently met. Nonetheless, a more careful, simple visual inspection suggests that the linearity hypothesis seems not to be fully satisfied. The confidence bands are of short length, and loess shows local variations following the trend line, which may indicate nonlinearity in the data.
 
 ```{r,  echo = FALSE, fig.width = 10, fig.height=5}
+
 ggplot(data, aes(x=Raven_IQ,y=SAI_winsorized_IQ)) + stat_smooth(method="loess", alpha=.2) + stat_smooth(method="lm", formula=y ~ x, color="red", fill="red", alpha=.2) + geom_point( aes(colour=study, shape=sex), size=2.3)+ scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+theme_linedraw()
+
 ```
 
 Linearity assumption can also be checked by plotting the Residuals versus the Fitted observations. Ideally, the residual plot will show no fitted pattern. That is, the blue line should be approximately horizontal at zero. The presence of a pattern may indicate a problem with some aspects of the linear model. In our case, we note that linearity is a reasonable assumption. We can use `crPlots()` function of `car` package in `R`.
@@ -142,8 +144,10 @@ lm.temp <- lm(SAI_winsorized_IQ~Raven_IQ, data=db)
 db$resid <- resid(lm.temp)
 db$fitted <- fitted(lm.temp)  
 
+
 ggplot(db, aes(x=fitted,y=resid)) + stat_smooth(method="loess", alpha=.2) + 
   geom_point( aes(colour=study, shape=sex), size=2.3)+ scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+geom_hline(yintercept=0, col="red", linetype="dashed")+xlab("Fitted values")+ylab("Residuals")+theme_linedraw()
+
 
 # ggplot(lm.temp, aes(.fitted, .resid))+stat_smooth(method="loess", alpha=.2)+geom_hline(yintercept=0, col="red", linetype="dashed")+xlab("Fitted values")+ylab("Residuals")+ geom_point(shape=1)+  theme_linedraw()
 ```
@@ -159,6 +163,7 @@ ggplot(db, aes(x=Raven_IQ,y=partial.resid)) + stat_smooth(method="loess", alpha=
   geom_point( aes(colour=study, shape=sex), size=2.3)+ scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+
 stat_smooth(method="lm", formula=y ~ x, color="red", fill="red", alpha=.2)+
   ylab(paste("Component+Residual(", responseName(lm.temp),")", sep=""))+theme_linedraw()# xlab("Raven_IQ")+ylab("Residuals")
+
 ```
 
 ### Checking homoscedasticity assumption
@@ -168,6 +173,7 @@ This assumption can be checked by examining the Scale-location plot, also known 
 ```{r,  echo = FALSE, fig.width = 10, fig.height=5}
 db$stdresid <- rstandard(lm.temp)
 db$rstandard <-  sqrt(abs(db$stdresid ))
+
 
 ggplot(db, aes(x=fitted,y=rstandard)) + stat_smooth(method="loess", alpha=.2) + 
   geom_point( aes(colour=study, shape=sex), size=2.3)+ scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+
@@ -196,6 +202,7 @@ db$fitval <- db$fitted
 # 	}
 
 # spreadLevelPlot(lm.temp, lwd=3, col.lines=c("red","blue"))
+
 
 ggplot(db, aes(x=fitval,y=resid2)) + stat_smooth(method="loess", alpha=.2) + 
   geom_point( aes(colour=study, shape=sex), size=2.3)+ scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+ scale_y_continuous(trans = log2_trans())+geom_smooth(method="rlm", color="red", fill="red", alpha=.2)+
@@ -232,6 +239,7 @@ We expect the absence of patterns in the plot that depict the standardized resid
   p2+labs(x='Observation ID', 
        y='Standardized Residuals', 
        title='Standardized Residuals vs ID of observations')
+
 ```
 
 We carried a Durbin Watson to examine the autocorrelation of errors. The null hypothesis in this regard states that these errors are not autocorrelated; that is, it is helpful to verify that we have not violated the independence assumption (presence of lack-of-fit).
@@ -255,6 +263,7 @@ By a simple visual inspection, we notice no strong evidence of normality deviati
 
 ```{r,  echo = FALSE, fig.width = 10, fig.height=6}
 y.lim<-range(db$SAI_winsorized_IQ)
+
 plotSimpleGamlss( x= Raven_IQ, 
                   y=SAI_winsorized_IQ,
                   model=temp, data=db, pch=1,
@@ -262,12 +271,15 @@ plotSimpleGamlss( x= Raven_IQ,
                   ylim=c(80, 170),
                   xlim=c(58, 135),
                   cols=viridis_pal(begin = 0.3, end = 0.95, alpha=0.4, option ="D", direction=1)(100))
+
 ```
 
 Worm-plots (Buuren, 2001) can be used to identify some data characteristics that the fitted model does not adequately capture. The yellow dots on the graph indicate how far the residuals depart from their expected null value. A high (low) variance pattern is related to positive (negative) sloped dots. When the dots are U-shaped (inverted U-shaped), there is evidence of positive (negative) skewness. There is evidence of large (small) kurtosis when the dots are S-shaped with left bent up (down); there is evidence of large (small) kurtosis.} When the model's specification is the right one, all the dots (or nearly all of them) should be inside the two dashed semicircles. A commonly used rule is to conclude that the model is correctly specified when at least $95\%$ of the dots fall between these limits.
 
 ```{r,  echo = FALSE, fig.width = 10, fig.height=6}
+
 wp(temp)
+
 ```
 
 In our case, we observe a U-shape and several points outside the confidence band, indicating that the hypothesis of normality and constant variance does not hold. The residuals QQ plot is helpful to check the normality assumption visually. The normal probability plot of residuals should approximately follow a straight line. In our example, all the points fall approximately along this reference line to assume normality. The histogram with kernel density of residuals is not necessary under the normality assumption (bimodality).
@@ -287,7 +299,10 @@ p.1 = p.1+theme_linedraw()
 # p.1 = p.1+theme_linedraw()
 
 p.2<-ggplot(db, aes(x=sresid ))+geom_histogram(aes(y=..density..), colour="black", fill="white")+ geom_density(alpha=.2, fill="#E69F00")+xlab("Theoretical Quantiles")+ylab("Density")+ggtitle("Distribution of Studentized Residuals")+theme_linedraw() 
+
+
 grid.arrange(p.1, p.2, ncol=2,   widths = c(2, 1.5), top="")
+
 ```
 
 We then go on to perform the robust and nonparametric Shapiro-Wilk Normality Test.
@@ -400,8 +415,8 @@ xyz <- data.frame(xy,z=z)
 # grid.draw(g)
 #  #
 #  #
- output <- plot_grid(p, p2, ncol=1)
- output
+ output2 <- plot_grid(p, p2, ncol=1)
+ output2
 }
 # 
 regresquan.madmedian(x = db$Raven_IQ, y = db$SAI_winsorized_IQ,
