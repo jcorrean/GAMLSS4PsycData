@@ -4,12 +4,12 @@ author: "Raydonal Ospina & Juan C. Correa"
 date: "`r Sys.Date()`"
 output:
   prettydoc::html_pretty:
-    theme: cayman
+    theme: cayman  # Keep the 'architect' theme
     highlight: github
+    css: styles.css   # Add a separate CSS file for customization
 header-includes:    
     geometry: margin = 1.0in
 ---
-
 
 ```{r, echo = FALSE, warning = FALSE}
 # Packages
@@ -49,7 +49,7 @@ responseName <- function (model, ...) deparse(attr(terms(model), "variables")[[2
 data<-read.csv("Dunning-Kruger_INTELL_UPLOAD.csv")
 ```
 
-```{r setup, include=FALSE} 
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 ```
 
@@ -57,9 +57,10 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 This tutorial relies on the data set originally described and analysed by Gignac, G. E. & Zajenkowski, M. (2020). The Dunning-Kruger Effect is (mostly) a statistical artefact: Valid approaches to testing the hypothesis with individual differences data. *Intelligence*, 80. doi: 10.1016/j.intell.2020.101449
 
-The Dunning-Kruger Effect (DKE) refers to the simple idea that people’s ignorance is often invisible to them. This meta-ignorance (i.e., ignorance of ignorance) that emerges as the result of a lack of expertise and relies on misbeliefs and background knowledge that are not appropriate for providing correct answers to a variety of questions. Studying DKE requires the analysis of self-assessed intelligence and comparing it with objective metrics. The raw data set revisited is a CSV file with 929 rows and 56 variables. The self-assessed intelligence (SAIQ) is on a discrete scale ranging from 1 to 25, while the intelligence objective metric (IQ) resulted from applying the Advanced Progressive Matrices.
+The Dunning-Kruger Effect (DKE) refers to the simple idea that people's ignorance is often invisible to them. This meta-ignorance (i.e., ignorance of ignorance) that emerges as the result of a lack of expertise and relies on misbeliefs and background knowledge that are not appropriate for providing correct answers to a variety of questions. Studying DKE requires the analysis of self-assessed intelligence and comparing it with objective metrics. The raw data set revisited is a CSV file with 929 rows and 56 variables. The self-assessed intelligence (SAIQ) is on a discrete scale ranging from 1 to 25, while the intelligence objective metric (IQ) resulted from applying the Advanced Progressive Matrices.
 
 ### Variables in data set
+
 ```{r,  echo = FALSE}
 # columns' names and structure
 data$sex <- as.factor(data$sex)
@@ -68,7 +69,9 @@ print(str(data))
 ```
 
 ### Balanced distribution of participants in the design
-In the data, we observed the presence of grouping variables that might lead to possible distributional changes and variability of response by, e.g., sex and type of study. Furthermore, we noticed a slight imbalance in the distribution of individuals.  
+
+In the data, we observed the presence of grouping variables that might lead to possible distributional changes and variability of response by, e.g., sex and type of study. Furthermore, we noticed a slight imbalance in the distribution of individuals.
+
 ```{r,  echo = FALSE, fig.width = 10, fig.height=6}
 p.1 <- ggplot(data = data) +
 geom_mosaic(aes(x = product(study, sex), fill=study))+ scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+theme_light()+ guides(fill=FALSE)
@@ -83,12 +86,14 @@ p.2 <- data %>%
   geom_text(colour = "white", nudge_y = .2, aes(label = paste0('Count: ', n))) + 
   geom_text(colour = "white", nudge_y = -.2, aes(label = paste0('Percent of Group: ', yes_no_pct, '%'))) + guides(fill=FALSE)+ theme_light()
 
+png("F1.png", width = 15, height = 7, units = 'in', res = 300)
 grid.arrange(p.1, p.2, ncol=2,   widths = c(1.5, 1.5), top="balancing size by age and study groups")
+dev.off()
 ```
 
+### Plots for each combination of variable types of interest
 
-### Plots for each combination of variable types of interest 
-We now select some variables of interest for building the regression model. We now see the scatterplots and distributions to determine if we have met the assumption of linearity. By checking the scatterplot, we get insights into outliers, extreme values, variability in the data set and how such variability moves together with other variables for the regression model. 
+We now select some variables of interest for building the regression model. We now see the scatterplots and distributions to determine if we have met the assumption of linearity. By checking the scatterplot, we get insights into outliers, extreme values, variability in the data set and how such variability moves together with other variables for the regression model.
 
 The proper use of linear regression requires the correct marginal distribution for inferential purposes (Hypothesis tests, confidence intervals, and prediction). We can see that the `Raven_IQ` (mean-centred), `sex`, `age`, and `study` covariates plotted against the dependent variable of interest `SAI_winsorized_IQ` has different distributional behaviour. We can observe that the covariate `Raven_IQ` shows a bimodality mainly at the junction of the covariate `study==motivation` and asymmetry in `study == couples`, which can reflect the lack of balancing of the data and can impact distributional hypotheses in the case of normality of the errors in traditional linear regression (i.e., normal symmetrical distribution with unimodality).
 
@@ -112,17 +117,21 @@ for(i in 1:p$nrow) {
         # scale_color_manual(values=c("red", "cornflowerblue", "purple"))  
   }
 }
+
+png("F2.png", width = 15, height = 9, units = 'in', res = 300)
 p+ theme_light()
+dev.off()
 ```
 
 ### Linearity of the Data
+
 To perform a more thorough evaluation of linear regression supposition, we proceed with loess smoother for each variable in the model. Loess smoother selectively weights points in the regression. We can also overlay the straight regression line as the original paper of Gignac and Zajenkowski (2020) to compare how the loess smoothing (detection of nonlinearities or local behaviour in data) compares to linear regression. In the plot, the grey shading corresponds to the standard errors for the loess smoother fit, while the red shading corresponds to the standard errors for the linear fit. The blue line is a loess smoothed line, and the red one is a linear regression line. As long as the loess smoother roughly approximates the linear tendency, the assumption of linearity has been apparently met. Nonetheless, a more careful, simple visual inspection suggests that the linearity hypothesis seems not to be fully satisfied. The confidence bands are of short length, and loess shows local variations following the trend line, which may indicate nonlinearity in the data.
 
 ```{r,  echo = FALSE, fig.width = 10, fig.height=5}
 ggplot(data, aes(x=Raven_IQ,y=SAI_winsorized_IQ)) + stat_smooth(method="loess", alpha=.2) + stat_smooth(method="lm", formula=y ~ x, color="red", fill="red", alpha=.2) + geom_point( aes(colour=study, shape=sex), size=2.3)+ scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+theme_linedraw()
 ```
 
-Linearity assumption can also be checked by plotting the Residuals versus the Fitted observations. Ideally, the residual plot will show no fitted pattern. That is, the blue line should be approximately horizontal at zero. The presence of a pattern may indicate a problem with some aspects of the linear model. In our case, we note that linearity is a reasonable assumption. We can use `crPlots()` function  of `car` package in `R`. 
+Linearity assumption can also be checked by plotting the Residuals versus the Fitted observations. Ideally, the residual plot will show no fitted pattern. That is, the blue line should be approximately horizontal at zero. The presence of a pattern may indicate a problem with some aspects of the linear model. In our case, we note that linearity is a reasonable assumption. We can use `crPlots()` function of `car` package in `R`.
 
 ```{r,  echo = TRUE}
 # The model - OLS estimation
@@ -138,7 +147,9 @@ ggplot(db, aes(x=fitted,y=resid)) + stat_smooth(method="loess", alpha=.2) +
 
 # ggplot(lm.temp, aes(.fitted, .resid))+stat_smooth(method="loess", alpha=.2)+geom_hline(yintercept=0, col="red", linetype="dashed")+xlab("Fitted values")+ylab("Residuals")+ geom_point(shape=1)+  theme_linedraw()
 ```
-The function `crPlots()` from the `car` package in `R` elaborates upon the partial-residual. The red line represents the line of best fit. The assumption is ok if the green line seems to be similarly linear as the red line. If the blue line appears curved relative to the red line, we likely have a linearity problem.  
+
+The function `crPlots()` from the `car` package in `R` elaborates upon the partial-residual. The red line represents the line of best fit. The assumption is ok if the green line seems to be similarly linear as the red line. If the blue line appears curved relative to the red line, we likely have a linearity problem.
+
 ```{r,  echo = FALSE, fig.width = 10, fig.height=5}
 db$pred.orig <- predict(lm.temp, type="terms")
 db$partial.resid <- db$pred.orig+db$resid  
@@ -151,7 +162,9 @@ stat_smooth(method="lm", formula=y ~ x, color="red", fill="red", alpha=.2)+
 ```
 
 ### Checking homoscedasticity assumption
-This assumption can be checked by examining the Scale-location plot, also known as the spread-location plot. Ideally, in the plot, we are interested in detecting a pattern in the residuals. If the blue line is flat and horizontal with equally and randomly spread data points, then this might be evidence of homoscedasticity. If the red line has a positive slope or the data points are not randomly spread out, the homoscedasticity assumption might not hold. This plot shows that residuals are not distributed equally along with the ranges of predictors. In our example, this is not entirely the case; rigorously, we need continued investigation of the homogeneity of variance.  
+
+This assumption can be checked by examining the Scale-location plot, also known as the spread-location plot. Ideally, in the plot, we are interested in detecting a pattern in the residuals. If the blue line is flat and horizontal with equally and randomly spread data points, then this might be evidence of homoscedasticity. If the red line has a positive slope or the data points are not randomly spread out, the homoscedasticity assumption might not hold. This plot shows that residuals are not distributed equally along with the ranges of predictors. In our example, this is not entirely the case; rigorously, we need continued investigation of the homogeneity of variance.
+
 ```{r,  echo = FALSE, fig.width = 10, fig.height=5}
 db$stdresid <- rstandard(lm.temp)
 db$rstandard <-  sqrt(abs(db$stdresid ))
@@ -167,8 +180,8 @@ ggplot(db, aes(x=fitted,y=rstandard)) + stat_smooth(method="loess", alpha=.2) +
    #  p3
 ```
 
+We are looking for any lawful curves or skewness in the data that suggest that the regression model is better or worse at predicting for specific levels of predictors. In this way, absolute studentized residuals refer to the absolute values (ignoring over or underfitting) of the quotient resulting from the division of a residual by an estimate of its standard deviation.
 
-We are looking for any lawful curves or skewness in the data that suggest that the regression model is better or worse at predicting for specific levels of predictors. In this way, absolute studentized residuals refer to the absolute values (ignoring over or underfitting) of the quotient resulting from the division of a residual by an estimate of its standard deviation.  
 ```{r,  echo = FALSE, fig.width = 10, fig.height=5}
 # abs of studentized residuals
 db$resid2 <-  abs(rstudent(lm.temp))
@@ -192,11 +205,13 @@ mod = rlm(log(resid2) ~ log(fitval), data=db)
 p <- 1 - (coefficients(mod))[2]
 cat('\nSuggested power transformation: ', p,'\n')
 ```
+
 In this case, even though there appear to be some small curves in the smoother, the linear fit seems fair straight across the scale. This is about the border of homoscedastic and heteroscedastic. However, we can observe patterns in the plot, and more investigations are necessary. Also, the function calculates spread-stabilizing power transformation of variation; in this case, the power transformation $y^* = response^\lambda$ suggested is for $\lambda = 2.20>1$, which is clear *evidence of non-constant variance* in the error term.
 
 ### Testing the homoscedasticity assumption.
 
-We can conduct tests to evaluate non-constant error variance. The functions `ncvTest()` and `bptest()` compute a score test for the hypothesis of constant error variance against the alternative that the error variance changes with the level of the response (fitted values) or with a linear combination of predictors. The default function `bptest()` uses the studentized Breusch-Pagan proposed by R. Koenker (1981) [A Note on Studentizing a Test for Heteroscedasticity. Journal of Econometrics 17, 107–112.] In contrast, the function `ncvTest()`  performs the original version of the Breusch-Pagan test [T.S. Breusch & A.R. Pagan (1979), A Simple Test for Heteroscedasticity and Random Coefficient Variation.  Econometrica 47, 1287–1294].     
+We can conduct tests to evaluate non-constant error variance. The functions `ncvTest()` and `bptest()` compute a score test for the hypothesis of constant error variance against the alternative that the error variance changes with the level of the response (fitted values) or with a linear combination of predictors. The default function `bptest()` uses the studentized Breusch-Pagan proposed by R. Koenker (1981) [A Note on Studentizing a Test for Heteroscedasticity. Journal of Econometrics 17, 107--112.] In contrast, the function `ncvTest()` performs the original version of the Breusch-Pagan test [T.S. Breusch & A.R. Pagan (1979), A Simple Test for Heteroscedasticity and Random Coefficient Variation. Econometrica 47, 1287--1294].
+
 ```{r,  echo = TRUE}
 # Breusch & Pagan test
 bptest(lm.temp)
@@ -208,30 +223,34 @@ ncvTest(lm.temp)
 Using the usual nominal significance values of tests (for example, 5%), we **reject** the hypothesis of homoscedasticity of errors using the two tests.
 
 ### Cheking Independence Assumption
-We expect the absence of patterns in the plot that depict the standardized residuals and the index of observations on ideal conditions. The presence of patterns pinpoints a lack of independence of observations or some endogeneity not controlled. By visual inspection of this plot, we observe groups formations for the original model proposed by Gignac and Zajenkowski 2020’s paper.  
+
+We expect the absence of patterns in the plot that depict the standardized residuals and the index of observations on ideal conditions. The presence of patterns pinpoints a lack of independence of observations or some endogeneity not controlled. By visual inspection of this plot, we observe groups formations for the original model proposed by Gignac and Zajenkowski 2020's paper.
+
 ```{r,  echo = FALSE, fig.width = 10, fig.height=5}
 
   p2<-ggplot(db, aes(x=ID, y=stdresid))+geom_point( aes(colour=study, shape=sex), size=2.3)+ scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+theme_linedraw()
   p2+labs(x='Observation ID', 
        y='Standardized Residuals', 
        title='Standardized Residuals vs ID of observations')
-```    
+```
+
 We carried a Durbin Watson to examine the autocorrelation of errors. The null hypothesis in this regard states that these errors are not autocorrelated; that is, it is helpful to verify that we have not violated the independence assumption (presence of lack-of-fit).
+
 ```{r,  echo = FALSE, fig.width = 14, fig.height=8}
 durbinWatsonTest(lm.temp)
-```  
+```
+
 Looking at the results, we see that the $p$-value is 0, so the errors are autocorrelated. We have violated the independence assumption. Such a violation would suggest, for example, the need to include a grouping variable, in our case, sex or study variables, to improve rigorousness.
-  
 
 ### Checking the assumption of normality of residuals and homoscedasticity
 
-Generalised additive model for location scale and shape (GAMLSS) is a semi-parametric framework to regression models [RIGBY, R. A.; STASINOPOULOS, D. M. Generalized additive models for location, scale and shape. Journal of the Royal Statistical Society: Series C (Applied Statistics), Wiley-Blackwell, v. 54, n. 3, p. 507–554, 2005.]. The gamlss package together with the gamlss.dist package provides extensions to the lm() and glm() functions from the stats package and the gam() function from the gam package for generalised additive models. In the GAMLSS approach, regression-based relationships are fitted without strong assumptions between the response and the covariates. Here, we can use this potential to find distributional evidence of model errors and lack-of-fit. Based on normality assumptions on errors and homoscedasticity, the linear model parametric fit based on OLS and likelihood are equivalent. Also, the hypothesis of normality of residuals is valid for inferential purposes. Therefore, we can fit the model proposed by Gignac and Zajenkowski (2020) under the GAMLSS perspective.
+Generalised additive model for location scale and shape (GAMLSS) is a semi-parametric framework to regression models [RIGBY, R. A.; STASINOPOULOS, D. M. Generalized additive models for location, scale and shape. Journal of the Royal Statistical Society: Series C (Applied Statistics), Wiley-Blackwell, v. 54, n. 3, p. 507--554, 2005.]. The gamlss package together with the gamlss.dist package provides extensions to the lm() and glm() functions from the stats package and the gam() function from the gam package for generalised additive models. In the GAMLSS approach, regression-based relationships are fitted without strong assumptions between the response and the covariates. Here, we can use this potential to find distributional evidence of model errors and lack-of-fit. Based on normality assumptions on errors and homoscedasticity, the linear model parametric fit based on OLS and likelihood are equivalent. Also, the hypothesis of normality of residuals is valid for inferential purposes. Therefore, we can fit the model proposed by Gignac and Zajenkowski (2020) under the GAMLSS perspective.
 
-
-```{r,  echo = FALSE} 
+```{r,  echo = FALSE}
 # The model - GAMLSS aproach
 temp <- gamlss(SAI_winsorized_IQ ~ Raven_IQ, data=db, family=NO, trace=FALSE)
 ```
+
 By a simple visual inspection, we notice no strong evidence of normality deviation. Nonetheless, we see that some density curves in the plots show different variability, which can be additional evidence of non-constant dispersion.
 
 ```{r,  echo = FALSE, fig.width = 10, fig.height=6}
@@ -244,12 +263,15 @@ plotSimpleGamlss( x= Raven_IQ,
                   xlim=c(58, 135),
                   cols=viridis_pal(begin = 0.3, end = 0.95, alpha=0.4, option ="D", direction=1)(100))
 ```
-Worm-plots  (Buuren, 2001) can be used to identify some data characteristics that the fitted model does not adequately capture. The yellow dots on the graph indicate how far the residuals depart from their expected null value. A high (low) variance pattern is related to positive (negative) sloped dots. When the dots are U-shaped (inverted U-shaped), there is evidence of positive (negative) skewness. There is evidence of large (small) kurtosis when the dots are S-shaped with left bent up (down); there is evidence of large (small) kurtosis.} When the model's specification is the right one, all the dots (or nearly all of them) should be inside the two dashed semicircles. A commonly used rule is to conclude that the model is correctly specified when at least $95\%$ of the dots fall between these limits.
+
+Worm-plots (Buuren, 2001) can be used to identify some data characteristics that the fitted model does not adequately capture. The yellow dots on the graph indicate how far the residuals depart from their expected null value. A high (low) variance pattern is related to positive (negative) sloped dots. When the dots are U-shaped (inverted U-shaped), there is evidence of positive (negative) skewness. There is evidence of large (small) kurtosis when the dots are S-shaped with left bent up (down); there is evidence of large (small) kurtosis.} When the model's specification is the right one, all the dots (or nearly all of them) should be inside the two dashed semicircles. A commonly used rule is to conclude that the model is correctly specified when at least $95\%$ of the dots fall between these limits.
+
 ```{r,  echo = FALSE, fig.width = 10, fig.height=6}
 wp(temp)
 ```
+
 In our case, we observe a U-shape and several points outside the confidence band, indicating that the hypothesis of normality and constant variance does not hold. The residuals QQ plot is helpful to check the normality assumption visually. The normal probability plot of residuals should approximately follow a straight line. In our example, all the points fall approximately along this reference line to assume normality. The histogram with kernel density of residuals is not necessary under the normality assumption (bimodality).
- 
+
 ```{r,  echo = FALSE, fig.width = 10, fig.height=5}
 db$sresid <- studres(lm.temp)
 temp <- qqnorm(db$sresid, plot.it = FALSE)
@@ -266,23 +288,23 @@ p.1 = p.1+theme_linedraw()
 
 p.2<-ggplot(db, aes(x=sresid ))+geom_histogram(aes(y=..density..), colour="black", fill="white")+ geom_density(alpha=.2, fill="#E69F00")+xlab("Theoretical Quantiles")+ylab("Density")+ggtitle("Distribution of Studentized Residuals")+theme_linedraw() 
 grid.arrange(p.1, p.2, ncol=2,   widths = c(2, 1.5), top="")
-```  
+```
+
 We then go on to perform the robust and nonparametric Shapiro-Wilk Normality Test.
+
 ```{r,  echo = FALSE}
 # distribution of studentized residuals
 shapiro.test(db$sresid)
-```  
-As the $p$-value< 0.5, it is clear that the residuals distribution deviates from a Normal distribution significantly.
+```
+
+As the $p$-value\< 0.5, it is clear that the residuals distribution deviates from a Normal distribution significantly.
 
 ### More on heteroskedasticity evidence
-With the idea of a regressogram to evaluate heteroscedasticity evidence, we propose
-constructing piecewise functions in the intervals $\{B_k:=[t_k,t_{k+1}):t_k=t_0+hk,k∈Z\}$ (uniform breaks) or $\{B_k:=[t_k,t_{k+1}):t_k-{\rm quantile \ empiric},k∈Z\}$ (quantile breaks) and calculate for the $y$ (ouput) the Coefficient of dispersion based on the MAD 
-$$CV_{\text{MAD}}=\widehat{\theta}_{\rm MAD} = \frac{\text{MAD}}{\text{Mdn}}$$ proposed by [Ospina, R., & Marmolejo-Ramos, F. (2019). Performance of some estimators of relative variability. Frontiers in Applied Mathematics and Statistics, 5, 43.] across the midpoints of $x$ (input)  in $B_k$ where
- \begin{equation}
+
+With the idea of a regressogram to evaluate heteroscedasticity evidence, we propose constructing piecewise functions in the intervals $\{B_k:=[t_k,t_{k+1}):t_k=t_0+hk,k∈Z\}$ (uniform breaks) or $\{B_k:=[t_k,t_{k+1}):t_k-{\rm quantile \ empiric},k∈Z\}$ (quantile breaks) and calculate for the $y$ (ouput) the Coefficient of dispersion based on the MAD $$CV_{\text{MAD}}=\widehat{\theta}_{\rm MAD} = \frac{\text{MAD}}{\text{Mdn}}$$ proposed by [Ospina, R., & Marmolejo-Ramos, F. (2019). Performance of some estimators of relative variability. Frontiers in Applied Mathematics and Statistics, 5, 43.] across the midpoints of $x$ (input) in $B_k$ where \begin{equation}
 \label{eq:MAD}
 \text{MAD}=1.4826\,\cdot\text{Median}\{|x-\widehat{Q}_{2}|\},
-\end{equation} and $\text{Mdn}=\widehat{Q}_{2}=\widehat{Q}(0.5)=F_n(0.5)^{-1}$   is an estimator of location that is robust as it has a high breakdown (The breakdown value is the smallest fraction of contamination that can cause the estimator to take on values far from its value on the uncontamined data). Here, we choose the bandwidth $h$ by the Sturges rule for histograms and we chose the percentils for quantile breaks. 
-The plots are produced in terms of the behaviour of the covariates against the response and in terms of the fitted values against the residuals. 
+\end{equation} and $\text{Mdn}=\widehat{Q}_{2}=\widehat{Q}(0.5)=F_n(0.5)^{-1}$ is an estimator of location that is robust as it has a high breakdown (The breakdown value is the smallest fraction of contamination that can cause the estimator to take on values far from its value on the uncontamined data). Here, we choose the bandwidth $h$ by the Sturges rule for histograms and we chose the percentils for quantile breaks. The plots are produced in terms of the behaviour of the covariates against the response and in terms of the fitted values against the residuals.
 
 ```{r,  echo = FALSE, message=FALSE,warning=FALSE}
 ## mad/median:
@@ -390,22 +412,21 @@ regresquan.madmedian(x = db$fitted, y = db$resid,
                  x.lab = "fitted", 
                  y.lab = "Residuals", main = "Regressogram MadMedian - Quantile breaks")
 
-```  
+```
 
-We can observe in plots that regardless of the way the breaks are constructed, the $CV_{\text{MAD}}$ is not constant, giving further evidence to our findings on heteroscedasticity.   
+We can observe in plots that regardless of the way the breaks are constructed, the $CV_{\text{MAD}}$ is not constant, giving further evidence to our findings on heteroscedasticity.
 
 ### Global Test of Model Assumptions
-Finally,  we can use  a global test of model assumptions using the `gvlma` package in `R`. The package allows the user to check out (almost) all the ideas discussed so far. This package relies on the methodology proposed by Pena and Slate (2006). [Global validation of linear model assumptions, Journal of the American Statistical Association, 101(473):341-354.] 
+
+Finally, we can use a global test of model assumptions using the `gvlma` package in `R`. The package allows the user to check out (almost) all the ideas discussed so far. This package relies on the methodology proposed by Pena and Slate (2006). [Global validation of linear model assumptions, Journal of the American Statistical Association, 101(473):341-354.]
 
 ```{r,  echo = FALSE}
 # model proposed by Gignac and Zajenkowski 2020
 gvmodel.gobble <- gvlma(lm.temp) 
 summary(gvmodel.gobble)
-```  
-We observe in the output that Skewness assumptions (symmetry by supposition in the NULL hypothesis) do not hold. Rejection of the null hypothesis ($p$-value < .05) indicates the need to transform the data or employ robust statistical techniques. Note that the `gvlma` package is a recent contribution to the `R` user community and might not be fully known and used by psychologists. In this sense, the presented results help the user to understand the relevance of proceeding with careful attention to the data behaviour. 
+```
 
-
-
+We observe in the output that Skewness assumptions (symmetry by supposition in the NULL hypothesis) do not hold. Rejection of the null hypothesis ($p$-value \< .05) indicates the need to transform the data or employ robust statistical techniques. Note that the `gvlma` package is a recent contribution to the `R` user community and might not be fully known and used by psychologists. In this sense, the presented results help the user to understand the relevance of proceeding with careful attention to the data behaviour.
 
 ```{r,  echo = TRUE}
 sessionInfo()
