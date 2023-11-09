@@ -70,7 +70,7 @@ print(str(data))
 
 ### Balanced distribution of participants in the design
 
-In the data, we observed the presence of grouping variables that might lead to possible distributional changes and variability of response by, e.g., sex and type of study. Furthermore, we noticed a slight imbalance in the distribution of individuals.
+In the data, we observed the presence of grouping variables that might lead to possible distributional changes and variability of response by, e.g., sex and type of study. Furthermore, we noticed a slight imbalance in the distribution of individuals. 
 
 ```{r,  echo = FALSE, fig.width = 10, fig.height=6}
 p.1 <- ggplot(data = data) +
@@ -443,6 +443,7 @@ summary(gvmodel.gobble)
 
 We observe in the output that Skewness assumptions (symmetry by supposition in the NULL hypothesis) do not hold. Rejection of the null hypothesis ($p$-value \< .05) indicates the need to transform the data or employ robust statistical techniques. Note that the `gvlma` package is a recent contribution to the `R` user community and might not be fully known and used by psychologists. In this sense, the presented results help the user to understand the relevance of proceeding with careful attention to the data behaviour.
 
+This tutorial was done in a computer with the following characteristics.
 ```{r,  echo = TRUE}
 sessionInfo()
 ```
