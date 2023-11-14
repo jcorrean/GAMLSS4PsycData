@@ -440,8 +440,9 @@ Finally, we can use a global test of model assumptions using the `gvlma` package
 gvmodel.gobble <- gvlma(lm.temp) 
 summary(gvmodel.gobble)
 ```
-
 We observe in the output that Skewness assumptions (symmetry by supposition in the NULL hypothesis) do not hold. Rejection of the null hypothesis ($p$-value \< .05) indicates the need to transform the data or employ robust statistical techniques. Note that the `gvlma` package is a recent contribution to the `R` user community and might not be fully known and used by psychologists. In this sense, the presented results help the user to understand the relevance of proceeding with careful attention to the data behaviour.
+
+Hola Umberto. Bienvenido
 
 This tutorial was done in a computer with the following characteristics.
 ```{r,  echo = TRUE}
